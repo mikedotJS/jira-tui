@@ -1,0 +1,62 @@
+{
+	"name": "@mikexrmn/jira-tui",
+	"version": "0.1.0",
+	"type": "module",
+	"engines": {
+		"node": ">=22"
+	},
+	"bin": {
+		"jira-tui": "./dist/cli.js"
+	},
+	"scripts": {
+		"dev": "tsx src/cli.tsx",
+		"build": "tsc",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check .",
+		"format": "biome check --write .",
+		"test": "vitest run",
+		"test:e2e": "pnpm build && tui-test",
+		"prepublishOnly": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+	},
+	"dependencies": {
+		"@inkjs/ui": "^2.0.0",
+		"@napi-rs/keyring": "^2.1.0",
+		"chalk": "^6.0.1",
+		"clipboardy": "^5.3.2",
+		"fuse.js": "^7.5.0",
+		"i18next": "^26.4.2",
+		"ink": "^7.1.1",
+		"jira.js": "^6.2.0",
+		"marked": "^15.0.12",
+		"marked-terminal": "^7.3.0",
+		"open": "^11.0.4",
+		"react": "^19.3.0",
+		"terminal-link": "^5.0.0",
+		"wrap-ansi": "^10.0.2"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.14",
+		"@microsoft/tui-test": "^0.0.4",
+		"@types/marked-terminal": "^6.1.1",
+		"@types/node": "^26.6.3",
+		"@types/react": "^19.3.0",
+		"ink-testing-library": "^4.0.0",
+		"tsx": "^4.23.15",
+		"typescript": "^7.0.2",
+		"vitest": "^5.0.2"
+	},
+	"files": [
+		"dist"
+	],
+	"description": "Jira dans le terminal : tout passe par une palette de commandes (Ctrl+K)",
+	"license": "MIT",
+	"keywords": [
+		"jira",
+		"tui",
+		"terminal",
+		"cli"
+	],
+	"publishConfig": {
+		"access": "public"
+	}
+}

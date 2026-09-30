@@ -63,5 +63,6 @@
 		"type": "git",
 		"url": "git+https://github.com/mikedotJS/jira-tui.git"
 	},
-	"homepage": "https://github.com/mikedotJS/jira-tui"
+	"homepage": "https://github.com/mikedotJS/jira-tui",
+	"packageManager": "pnpm@11.22.0"
 }

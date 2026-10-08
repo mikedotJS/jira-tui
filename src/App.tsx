@@ -2,14 +2,17 @@ import { Spinner } from "@inkjs/ui";
 import clipboard from "clipboardy";
 import { Box, Text, useApp, useInput } from "ink";
 import open from "open";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createClient, createSuggester } from "./ai.js";
 import {
 	type Config,
 	clearAccount,
 	defaultFilters,
 	defaultSearchName,
+	loadAiKey,
 	loadConfig,
 	loadToken,
+	saveAiKey,
 	saveConfig,
 	saveToken,
 } from "./config.js";
@@ -49,6 +52,7 @@ import { Palette } from "./screens/Palette.js";
 import { type Project, Projects } from "./screens/Projects.js";
 import { Results } from "./screens/Results.js";
 import {
+	ACTIVE_SPRINT,
 	buildJql,
 	emptyFilters,
 	type FilterName,
@@ -117,6 +121,12 @@ export function App() {
 	const filtersRef = useRef(filters);
 	const [sprints, setSprints] = useState(false);
 	const [favorites, setFavorites] = useState<Config["favorites"]>([]);
+	const [aiKey, setAiKey] = useState(loadAiKey);
+	const aiReady = !!aiKey && config?.ai !== false;
+	const suggester = useMemo(
+		() => aiKey && createSuggester(createClient(aiKey)),
+		[aiKey],
+	);
 
 	const fail = useCallback(
 		(e: unknown) => setScreen({ name: "login", error: explainError(e) }),
@@ -498,6 +508,96 @@ export function App() {
 		},
 	});
 
+	const aiCommand = (): Command => {
+		const toggle = (ai: boolean) => {
+			updateConfig({ ai });
+			notify(t(ai ? "status.aiEnabled" : "status.aiDisabled"));
+		};
+		if (aiReady)
+			return {
+				id: "ai-toggle",
+				label: t("commands.aiOff"),
+				run: () => toggle(false),
+			};
+		if (aiKey)
+			return {
+				id: "ai-toggle",
+				label: t("commands.aiOn"),
+				run: () => toggle(true),
+			};
+		return {
+			id: "ai-toggle",
+			label: t("commands.aiAskKey"),
+			pick: (q) =>
+				q.trim()
+					? [
+							{
+								id: "ai-key-save",
+								label: t("commands.aiSaveKey"),
+								run: () => {
+									saveAiKey(q.trim());
+									setAiKey(q.trim());
+									toggle(true);
+								},
+							},
+						]
+					: [],
+		};
+	};
+
+	// Haiku propose 1 à 3 commandes (et au besoin une recherche) pour la phrase tapée.
+	const suggest = async (phrase: string, signal: AbortSignal) => {
+		if (!suggester || !jira) return [];
+		const { ids, search, activeSprint, assignToMe } = await suggester(
+			phrase,
+			commands,
+			signal,
+		);
+		// Une recherche décrite par l'IA (mots, sprint actif), avec en option « m'assigner tout ».
+		const found: Command[] = [];
+		if (search || activeSprint) {
+			const f: Filters = {
+				...emptyFilters(),
+				text: search,
+				sprint: activeSprint ? [ACTIVE_SPRINT] : [],
+				names: { [ACTIVE_SPRINT]: t("choices.activeSprint") },
+			};
+			const summary = summarize(f);
+			found.push(
+				assignToMe
+					? {
+							id: "ai:assign-all",
+							label: t("commands.aiAssignAll", { summary }),
+							run: () => {
+								changeFilters(f);
+								attempt(async () => {
+									const cards = await searchIssues(
+										jira,
+										buildJql(projectKey, f),
+									);
+									const me = await myAccountId(jira);
+									await Promise.all(
+										cards.map((c) => assignIssue(jira, c.key, me)),
+									);
+									notify(t("status.assignedMany", { count: cards.length }));
+									await runSearch();
+								});
+							},
+						}
+					: {
+							id: "ai:search",
+							label: t("commands.aiSearch", { summary }),
+							run: () => changeFilters(f),
+						},
+			);
+		}
+		const single = assignToMe ? new Set(["assign-me", "unassign"]) : new Set();
+		for (const c of commands)
+			if (ids.includes(c.id) && !single.has(c.id))
+				found.push({ ...c, id: `ai:${c.id}` });
+		return found;
+	};
+
 	const logout = async () => {
 		if (!config) return;
 		await clearAccount(config.email);
@@ -803,6 +903,7 @@ export function App() {
 				saveConfig(next).catch(() => {});
 			},
 		},
+		aiCommand(),
 		{ id: "logout", label: t("commands.logout"), run: logout },
 		{ id: "quit", label: t("commands.quit"), run: exit },
 	];
@@ -827,6 +928,7 @@ export function App() {
 			<Palette
 				commands={commands}
 				recents={config?.recents ?? []}
+				suggest={aiReady ? suggest : undefined}
 				onRun={runCommand}
 				onClose={() => setPaletteOpen(false)}
 			/>

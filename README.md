@@ -51,6 +51,14 @@ L'interface suit la langue de l'OS (français ou anglais) ; toute autre langue s
 
 Plusieurs valeurs dans un même filtre élargissent la recherche (« ou »). Plusieurs filtres ensemble la resserrent (« et »).
 
+## Suggestions IA (optionnel)
+
+Tapez une phrase dans la palette (« mes tickets bloqués ») : Claude Haiku propose jusqu'à 3 commandes, et au besoin une recherche, dans une section « Suggestions IA ».
+
+- **Activation** : commande « Activer les suggestions IA… » (colle la clé une fois, rangée dans le trousseau), ou variable `ANTHROPIC_API_KEY`. « Désactiver les suggestions IA » les coupe.
+- **Sans clé, sans réseau ou en cas d'erreur** : la palette marche exactement comme avant.
+- **Confidentialité** : seuls la phrase tapée et les libellés des commandes (qui peuvent contenir la clé du ticket sélectionné) partent chez Anthropic. Jamais le contenu des tickets.
+
 ## Limites de la V1
 
 Jira Cloud, un compte, un seul projet à la fois. Pas de création de ticket, ni de modification du titre, de la priorité ou des commentaires.

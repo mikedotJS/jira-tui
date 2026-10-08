@@ -37,6 +37,10 @@ export const fr: Translation = {
 		unassigned: "{{key}} n'est plus assigné",
 		assignedTo: "{{key}} assigné à {{name}}",
 		linkCopied: "Lien de {{key}} copié",
+		assignedMany_one: "{{count}} ticket vous est assigné",
+		assignedMany_other: "{{count}} tickets vous sont assignés",
+		aiEnabled: "Suggestions IA activées",
+		aiDisabled: "Suggestions IA désactivées",
 	},
 	commands: {
 		move: "Déplacer {{key}} vers…",
@@ -73,6 +77,12 @@ export const fr: Translation = {
 		themeDark: "Thème sombre",
 		logout: "Se déconnecter",
 		quit: "Quitter",
+		aiSearch: "Rechercher : {{summary}}",
+		aiAssignAll: "M'assigner tous les tickets : {{summary}}",
+		aiOff: "Désactiver les suggestions IA",
+		aiOn: "Activer les suggestions IA",
+		aiAskKey: "Activer les suggestions IA… (collez votre clé API Anthropic)",
+		aiSaveKey: "Enregistrer la clé et activer",
 	},
 	errors: {
 		rateLimit:
@@ -122,6 +132,7 @@ export const fr: Translation = {
 		footer: "↑↓ choisir · Entrée lancer · Échap {{action}}",
 		back: "retour",
 		close: "fermer",
+		ai: "Suggestions IA",
 	},
 	detail: {
 		description: "Description",

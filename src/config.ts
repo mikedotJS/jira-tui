@@ -14,6 +14,8 @@ export type Config = {
 	favorites?: { name: string; filters: Filters }[];
 	// Nom du favori lancé à l'accueil, par clé de projet.
 	defaultSearches?: Record<string, string>;
+	// Suggestions IA : actives par défaut dès qu'une clé est disponible.
+	ai?: boolean;
 };
 
 export const defaultSearchName = (c?: Config) =>
@@ -49,6 +51,20 @@ export const loadToken = (email: string) =>
 
 export const saveToken = (email: string, token: string) =>
 	new Entry(SERVICE, email).setPassword(token);
+
+const aiEntry = () => new Entry(SERVICE, "anthropic-api-key");
+
+export const loadAiKey = () => {
+	try {
+		return (
+			process.env.ANTHROPIC_API_KEY || aiEntry().getPassword() || undefined
+		);
+	} catch {
+		return undefined;
+	}
+};
+
+export const saveAiKey = (key: string) => aiEntry().setPassword(key);
 
 export async function clearAccount(email: string) {
 	new Entry(SERVICE, email).deletePassword();

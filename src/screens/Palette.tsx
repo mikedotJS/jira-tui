@@ -6,18 +6,21 @@ import { useAccent, useBackground } from "../theme.js";
 import { Modal, useModalRows } from "./Modal.js";
 
 const DEBOUNCE_MS = 150;
+const AI_DEBOUNCE_MS = 600;
 const MAX_VISIBLE = 12;
-// Saisie, message d'état et pied de page.
-const RESERVED_ROWS = 3;
+// Saisie, message d'état, titre des suggestions IA et pied de page.
+const RESERVED_ROWS = 4;
 
 export function Palette({
 	commands,
 	recents,
+	suggest,
 	onRun,
 	onClose,
 }: {
 	commands: Command[];
 	recents: string[];
+	suggest?: (query: string, signal: AbortSignal) => Promise<Command[]>;
 	onRun: (command: Command) => void;
 	onClose: () => void;
 }) {
@@ -30,7 +33,10 @@ export function Palette({
 	const [options, setOptions] = useState<Command[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [tick, setTick] = useState(0);
-	const results = picker ? options : rankCommands(commands, query, recents);
+	const [suggestions, setSuggestions] = useState<Command[]>([]);
+	const [thinking, setThinking] = useState(false);
+	const ranked = picker ? options : rankCommands(commands, query, recents);
+	const results = picker ? ranked : [...suggestions, ...ranked];
 	// La liste défile pour garder la sélection visible.
 	const start = Math.max(
 		0,
@@ -56,6 +62,33 @@ export function Palette({
 			clearTimeout(timer);
 		};
 	}, [picker, query, tick]);
+
+	// Phrase naturelle : sans commande évidente ou à plusieurs mots, on demande à l'IA.
+	const wantsAi =
+		!!suggest &&
+		!picker &&
+		query.trim().length >= 3 &&
+		(ranked.length === 0 || query.trim().includes(" "));
+	// biome-ignore lint/correctness/useExhaustiveDependencies: seule la saisie relance l'appel
+	useEffect(() => {
+		setSuggestions([]);
+		if (!wantsAi || !suggest) return setThinking(false);
+		const controller = new AbortController();
+		setThinking(true);
+		const timer = setTimeout(async () => {
+			try {
+				const found = await suggest(query, controller.signal);
+				if (!controller.signal.aborted) setSuggestions(found);
+			} catch {
+				// Sans clé, sans réseau ou en cas d'échec : la palette marche comme avant.
+			}
+			if (!controller.signal.aborted) setThinking(false);
+		}, AI_DEBOUNCE_MS);
+		return () => {
+			controller.abort();
+			clearTimeout(timer);
+		};
+	}, [query, wantsAi]);
 
 	const type = (next: string) => {
 		setQuery(next);
@@ -95,7 +128,13 @@ export function Palette({
 				<Text inverse> </Text>
 			</Text>
 			{loading && <Text dimColor>{t("palette.searching")}</Text>}
-			{!loading && results.length === 0 && (
+			{(thinking || suggestions.length > 0) && (
+				<Text dimColor>
+					{t("palette.ai")}
+					{thinking && "…"}
+				</Text>
+			)}
+			{!loading && !thinking && results.length === 0 && (
 				<Text dimColor>
 					{picker ? t("palette.noResult") : t("palette.noCommand")}
 				</Text>

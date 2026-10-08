@@ -35,6 +35,10 @@ export const en = {
 		unassigned: "{{key}} is no longer assigned",
 		assignedTo: "{{key}} assigned to {{name}}",
 		linkCopied: "Link to {{key}} copied",
+		assignedMany_one: "{{count}} ticket assigned to you",
+		assignedMany_other: "{{count}} tickets assigned to you",
+		aiEnabled: "AI suggestions enabled",
+		aiDisabled: "AI suggestions disabled",
 	},
 	commands: {
 		move: "Move {{key}} to…",
@@ -71,6 +75,12 @@ export const en = {
 		themeDark: "Dark theme",
 		logout: "Log out",
 		quit: "Quit",
+		aiSearch: "Search: {{summary}}",
+		aiAssignAll: "Assign me all the tickets: {{summary}}",
+		aiOff: "Disable AI suggestions",
+		aiOn: "Enable AI suggestions",
+		aiAskKey: "Enable AI suggestions… (paste your Anthropic API key)",
+		aiSaveKey: "Save the key and enable",
 	},
 	errors: {
 		rateLimit:
@@ -119,6 +129,7 @@ export const en = {
 		footer: "↑↓ select · Enter run · Esc {{action}}",
 		back: "back",
 		close: "close",
+		ai: "AI suggestions",
 	},
 	detail: {
 		description: "Description",
